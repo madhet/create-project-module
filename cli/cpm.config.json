@@ -1,0 +1,49 @@
+{
+  "dirFileTemplates": "/cli/file-templates",
+  "dirDestination": "/src",
+  "types": {
+    "feature": "nameFeature",
+    "page": "namePage",
+    "widget": "nameFeature/nameWidget",
+    "component": "nameFeature/nameComponent",
+    "vue-component": "nameComponent"
+  },
+  "staticReplacePairs": {
+    "nameFeature": "",
+    "namePage": "",
+    "nameWidget": "",
+    "nameComponent": ""
+  },
+  "structure": {
+    "feature": {
+      "features/[[nameFeature]]/application/use-cases": {},
+      "features/[[nameFeature]]/application/context": {},
+      "features/[[nameFeature]]/application/widgets": {},
+      "features/[[nameFeature]]/application/components": {},
+      "features/[[nameFeature]]/domain": {},
+      "features/[[nameFeature]]/infrastructure": {}
+    },
+    "page": {
+      "pages/[[namePage]]": {
+        "page/page.template.jsx": "[[namePage]].jsx"
+      }
+    },
+    "widget": {
+      "features/[[nameFeature]]/application/widgets/[[nameWidget]]": {
+        "widget/widget.template.jsx": "[[nameWidget]].jsx"
+      }
+    },
+    "component": {
+      "features/[[nameFeature]]/application/components/[[nameComponent]]": {
+        "component/component.template.jsx": "[[nameComponent]].jsx",
+        "component/componentStyled.template.js": "[[nameComponent]]Styled.js",
+        "component/component.test.template.js": "[[nameComponent]].test.js"
+      }
+    },
+    "vue-component": {
+      "vue-example/components/[[nameComponent]]": {
+        "vue-component/component.template.vue": "[[nameComponent]].vue"
+      }
+    }
+  }
+}
