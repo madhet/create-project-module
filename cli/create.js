@@ -19,6 +19,39 @@ TODO:
 const TYPE_VALUE_SEPARATOR = '/';
 const CONFIG_FILE_NAME = 'cpm.config.json';
 
+const consoleMessage = (message, type = 'log') => {
+  const prefixTypes = {
+    log: '',
+    warn: 'Warning!',
+    error: 'ERROR!',
+  };
+
+  const prefix = prefixTypes[type] ? `${prefixTypes[type]} ` : '';
+    
+  const consoleFunc = console[type] || console.log;
+
+  const consoleMessage = `${prefix}${message}\n`;
+
+  consoleFunc(consoleMessage);
+};
+
+const printErrorMessage = (message) => {
+  consoleMessage(message, 'error');
+  process.exit(0);
+};
+
+const printWarnMessage = (message) => {
+  consoleMessage(message, 'warn');
+};
+
+const printMessage = (message) => {
+  consoleMessage(message);
+};
+
+const printError = (error) => {
+  console.error(error);
+};
+
 const splitString = (strToSplit, separator) => strToSplit
   .split(separator)
   .filter(part => !!part);
@@ -65,7 +98,7 @@ const dirCli = __dirname;
 const configPath = joinPathes(dirCli, CONFIG_FILE_NAME);
 
 if (!fs.existsSync(configPath)) {
-  throw new Error(`Can't find "${CONFIG_FILE_NAME}" at ${configPath}`);
+  printErrorMessage(`Can't find "${CONFIG_FILE_NAME}" at ${configPath}!`);
 }
 
 let configData = {};
@@ -74,7 +107,7 @@ try {
   const configJson = fs.readFileSync(configPath, 'utf-8');
   configData = JSON.parse(configJson);
 } catch (error) {
-  console.log(error);
+  printError(error);
 }
 
 const { types, staticReplacePairs, structure, dirFileTemplates, dirDestination } = configData;
@@ -82,7 +115,7 @@ const { types, staticReplacePairs, structure, dirFileTemplates, dirDestination }
 const dirProjectDestination = joinPathes(dirProject, dirDestination);
 
 if (!fs.existsSync(dirProjectDestination)) {
-  throw new Error(`Destination folder "${dirProjectDestination}" does not exist!`);
+  printErrorMessage(`Destination folder "${dirProjectDestination}" does not exist!`);
 }
 
 const [
@@ -95,7 +128,7 @@ const [
 const configTypeString = types[argsType];
 
 if (!configTypeString) {
-  throw new Error(`No such type: ${argsType} in config file`);
+  printErrorMessage(`No such type: ${argsType} in config file!`);
 }
 
 const configTypeValues = splitString(configTypeString, TYPE_VALUE_SEPARATOR);
@@ -103,7 +136,7 @@ const configTypeValues = splitString(configTypeString, TYPE_VALUE_SEPARATOR);
 const argsTypeValues = splitString(argsTypeString, TYPE_VALUE_SEPARATOR);
 
 if (argsTypeValues.length < configTypeValues.length) {
-  throw new Error(`Type value "${argsTypeString}" does not match value "${configTypeString}" in config file!`);
+  printErrorMessage(`Type value "${argsTypeString}" does not match value "${configTypeString}" in config file!`);
 }
 
 const argsValues = configTypeValues
@@ -154,12 +187,12 @@ const createFileFullPath = (dirPath, filePath) => {
 
 const createFileFromTemplate = (templateFilePath, filePath) => {
   if (!fs.existsSync(templateFilePath)) {
-    console.warn(`Template file ${templateFilePath} does not exist!\n`);
+    printWarnMessage(`Template file ${templateFilePath} does not exist!`);
     return;
   }
 
   if (fs.existsSync(filePath)) {
-    console.warn(`Destination file ${filePath} is already exist and will be skipped!\n`);
+    printWarnMessage(`Destination file ${filePath} is already exist and will be skipped!`);
     return;
   }
 
@@ -168,7 +201,7 @@ const createFileFromTemplate = (templateFilePath, filePath) => {
     const fileData = substituteFileContent(templateData);
     fs.writeFileSync(filePath, fileData);
   } catch (error) {
-    console.error(error);
+    printError(error);
   }
 };
 
@@ -197,7 +230,7 @@ const createType = (type) => {
   const typeStructure = structure[type];
 
   if (!typeStructure) {
-    throw new Error(`No structure for type: ${type} in config file`);
+    printErrorMessage(`No structure for type: ${type} in config file!`);
   }
 
   parseFolders(typeStructure);
@@ -207,7 +240,7 @@ try {
   // main function
   createType(argsType);
 } catch(error) {
-  console.error(error);
+  printError(error);
 }
 
-console.log(`DONE!\n`);
+printMessage(`DONE!`);
