@@ -108,17 +108,21 @@ if (!argsTypeString) {
   printErrorMessage('Required parameter "type-value" is missing!');
 }
 
+// path to project root folder
 const dirProject = path.resolve('');
+// path to cli folder
 const dirCli = __dirname;
-
+// path to config file
 const configPath = joinPathes(dirCli, CONFIG_FILE_NAME);
 
+// check if config file exists
 if (!fs.existsSync(configPath)) {
   printErrorMessage(`Can't find "${CONFIG_FILE_NAME}" at ${configPath}!`);
 }
 
 let configData = {};
 
+// read from config file
 try {
   const configJson = fs.readFileSync(configPath, 'utf-8');
   configData = JSON.parse(configJson);
@@ -126,10 +130,18 @@ try {
   printError(error);
 }
 
-const { types, staticReplacePairs, structure, dirFileTemplates, dirDestination } = configData;
+const {
+  types,
+  staticReplacePairs,
+  structure,
+  dirFileTemplates,
+  dirDestination,
+} = configData;
 
+// path to destination folder
 const dirProjectDestination = joinPathes(dirProject, dirDestination);
 
+// check if destination folder exists
 if (!fs.existsSync(dirProjectDestination)) {
   printErrorMessage(`Destination folder "${dirProjectDestination}" does not exist!`);
 }
