@@ -90,7 +90,23 @@ const substituteFileContent = (fileData) => {
   return substituteString(fileData, { pascal: true });
 };
 
+// get type name and value from comand line args
+const [
+  ,               // path to node
+  ,               // path to executed js file
+  argsType,       // type for config.types
+  argsTypeString, // value for config.types[type]
+] = process.argv;
 
+// check if type name exists
+if (!argsType) {
+  printErrorMessage('Required parameter "type-id" is missing!');
+}
+
+// check if type value exists
+if (!argsTypeString) {
+  printErrorMessage('Required parameter "type-value" is missing!');
+}
 
 const dirProject = path.resolve('');
 const dirCli = __dirname;
@@ -117,13 +133,6 @@ const dirProjectDestination = joinPathes(dirProject, dirDestination);
 if (!fs.existsSync(dirProjectDestination)) {
   printErrorMessage(`Destination folder "${dirProjectDestination}" does not exist!`);
 }
-
-const [
-  ,               // path to node
-  ,               // path to executed js file
-  argsType,       // type for config.types
-  argsTypeString, // value for config.types[type]
-] = process.argv;
 
 const configTypeString = types[argsType];
 
