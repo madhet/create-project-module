@@ -179,41 +179,54 @@ const getCommandLineArgs = async (args, config) => {
   };
 };
 
+const getReplacePairs = (argsType, argsTypeString, fileConfig) => {
+  const {
+    types,
+    staticReplacePairs,
+  } = fileConfig;
 
-const configTypeValues = splitString(configTypeString, TYPE_VALUE_SEPARATOR);
+  // get type value from config
+  const configTypeString = types[argsType];
 
-const argsTypeValues = splitString(argsTypeString, TYPE_VALUE_SEPARATOR);
+  const configTypeValues = splitString(configTypeString, TYPE_VALUE_SEPARATOR);
 
-if (argsTypeValues.length < configTypeValues.length) {
-  printErrorMessage(`Type value "${argsTypeString}" does not match value "${configTypeString}" in config file!`);
-}
+  const argsTypeValues = splitString(argsTypeString, TYPE_VALUE_SEPARATOR);
 
-const argsValues = configTypeValues
-  .reduce((acc, paramName, idx) => {
-    const valueFromArgs = argsTypeValues[idx];
+  const argsReplacePairs = configTypeValues
+    .reduce((acc, paramName, idx) => {
+      const valueFromArgs = argsTypeValues[idx];
 
-    return valueFromArgs ? { ...acc, [paramName]: valueFromArgs } : acc;
-  }, {});
+      return valueFromArgs ? { ...acc, [paramName]: valueFromArgs } : acc;
+    }, {});
 
-// total params to replace in strings and templates
-const replaceValues = {
-  ...staticReplacePairs,
-  ...argsValues,
+  return {
+    ...staticReplacePairs,
+    ...argsReplacePairs,
+  };
 };
 
-const createDir = (dirPath) => {
-  const parentPath = dirProjectDestination;
-  const finalPath = substituteDirPath(dirPath);
-  const finalPathParts = splitString(finalPath, TYPE_VALUE_SEPARATOR);
-  const tempPathParts = [];
+const getFullConfig = (argsType, argsTypeString, fileConfig) => {
+  // path to project root folder
+  const dirProject = path.resolve('');
 
-  finalPathParts.forEach(part => {
-    tempPathParts.push(part);
-    const currentResolvePath = path.resolve(parentPath, ...tempPathParts);
-    if (!fs.existsSync(currentResolvePath)) {
-      fs.mkdirSync(currentResolvePath);
-    }
-  });
+  const replacePairs = getReplacePairs(argsType, argsTypeString, fileConfig);
+
+  const { dirDestination } = fileConfig;
+
+  // path to destination folder
+  const dirProjectDestination = joinPathes(dirProject, dirDestination);
+
+  // check if destination folder exists
+  if (!fs.existsSync(dirProjectDestination)) {
+    printErrorMessage(`Destination folder "${dirProjectDestination}" does not exist!`);
+  }
+
+  return {
+    ...fileConfig,
+    replacePairs,
+    dirProject,
+    dirProjectDestination,
+  };
 };
 
 const getFileFullPath = (parentPath, filePath) => joinPathes(
