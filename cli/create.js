@@ -326,11 +326,21 @@ const createType = (type, config = {}) => {
   parseFolders(typeStructure, config);
 };
 
-try {
-  // main function
-  createType(argsType);
-} catch(error) {
-  printError(error);
-}
+// main function definition
+const main = async (args) => {
+  const fileConfig = getConfigFromFile();
 
-printMessage(`DONE!`);
+  const { argsType, argsTypeString } = await getCommandLineArgs(args, fileConfig);
+
+  const fullConfig = getFullConfig(argsType, argsTypeString, fileConfig);
+
+  try {
+    createType(argsType, fullConfig);
+  } catch(error) {
+    printError(error);
+  }
+
+  printMessage(`DONE!`);
+};
+
+main(process.argv);
