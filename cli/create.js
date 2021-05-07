@@ -112,27 +112,73 @@ const getConfigFromFile = () => {
   }
 };
 
-const {
-  types,
-  staticReplacePairs,
-  structure,
-  dirFileTemplates,
-  dirDestination,
-} = configData;
+const isTypeValueValid = (checkedTypeString, configTypeString) => {
+  if (!checkedTypeString || !configTypeString) {
+    return false;
+  }
 
-// path to destination folder
-const dirProjectDestination = joinPathes(dirProject, dirDestination);
+  const configTypeValues = splitString(configTypeString, TYPE_VALUE_SEPARATOR);
 
-// check if destination folder exists
-if (!fs.existsSync(dirProjectDestination)) {
-  printErrorMessage(`Destination folder "${dirProjectDestination}" does not exist!`);
-}
+  const checkedTypeValues = splitString(checkedTypeString, TYPE_VALUE_SEPARATOR);
 
-const configTypeString = types[argsType];
+  return checkedTypeValues.length >= configTypeValues.length;
+};
 
-if (!configTypeString) {
-  printErrorMessage(`No such type: ${argsType} in config file!`);
-}
+const getCommandLineArgs = async (args, config) => {
+  const readline = require("readline");
+
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  const prompt = (questionText) => new Promise((resolve) => {
+    rl.question(questionText, (input) => {
+      resolve(input);
+      rl.pause();
+    });
+  });
+
+  // get type name and value from comand line args
+  let [
+    ,               // path to node
+    ,               // path to executed js file
+    argsType,       // type for config.types
+    argsTypeString, // value for config.types[type]
+  ] = args;
+
+  // get types from config
+  const {
+    types,
+  } = config;
+
+  // check argsType exist and has valid value
+  while (!argsType || !types[argsType]) {
+    if (argsType && !types[argsType]) {
+      printWarnMessage(`No such type "${argsType}" in config file!`);
+    }
+    argsType = await prompt('Please provide required parameter [type]: ');
+  }
+
+  // get type value from config
+  const configTypeString = types[argsType];
+
+  // check argsTypeString exist and has valid value
+  while (!argsTypeString || !isTypeValueValid(argsTypeString, configTypeString)) {
+    if (argsTypeString && !isTypeValueValid(argsTypeString, configTypeString)) {
+      printWarnMessage(`Type value "${argsTypeString}" does not match value "${configTypeString}" in config file!`);
+    }
+    argsTypeString = await prompt('Please provide required parameter [type-value]: ');
+  }
+
+  rl.close();
+
+  return {
+    argsType,
+    argsTypeString,
+  };
+};
+
 
 const configTypeValues = splitString(configTypeString, TYPE_VALUE_SEPARATOR);
 
