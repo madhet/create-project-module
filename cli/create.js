@@ -17,7 +17,6 @@ TODO:
 */
 
 const TYPE_VALUE_SEPARATOR = '/';
-const CONFIG_FILE_NAME = 'cpm.config.json';
 
 const consoleMessage = (message, type = 'log') => {
   const prefixTypes = {
@@ -27,7 +26,7 @@ const consoleMessage = (message, type = 'log') => {
   };
 
   const prefix = prefixTypes[type] ? `${prefixTypes[type]} ` : '';
-    
+
   const consoleFunc = console[type] || console.log;
 
   const consoleMessage = `${prefix}${message}\n`;
@@ -52,18 +51,25 @@ const printError = (error) => {
   console.error(error);
 };
 
-const splitString = (strToSplit, separator) => strToSplit
-  .split(separator)
-  .filter(part => !!part);
+const splitString = (strToSplit, separator) => {
+  return strToSplit
+    .split(separator)
+    .filter(part => !!part);
+};
 
-const joinPathes = (...pathes) => path.join(...pathes);
+const joinPathes = (...pathes) => {
+  return path
+    .join(...pathes);
+};
 
-const toPascalCase = (str) => splitString(str, /[-_]/g)
-  .map((word) => word 
-    ? `${word[0].toUpperCase()}${word.slice(1)}` 
-    : '' 
-  )
-  .join('');
+const toPascalCase = (str) => {
+  return splitString(str, /[-_]/g)
+    .map((word) => word
+      ? `${word[0].toUpperCase()}${word.slice(1)}`
+      : ''
+    )
+    .join('');
+};
 
 const substituteString = (str, replacePairs, options = {}) => {
   const { pascal } = options;
