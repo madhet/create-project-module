@@ -90,45 +90,27 @@ const substituteFileContent = (fileData) => {
   return substituteString(fileData, { pascal: true });
 };
 
-// get type name and value from comand line args
-const [
-  ,               // path to node
-  ,               // path to executed js file
-  argsType,       // type for config.types
-  argsTypeString, // value for config.types[type]
-] = process.argv;
+const getConfigFromFile = () => {
+  // name for config file
+  const CONFIG_FILE_NAME = 'cpm.config.json';
+  // path to cli folder
+  const dirCli = __dirname;
+  // path to config file
+  const configPath = joinPathes(dirCli, CONFIG_FILE_NAME);
+  
+  // check if config file exists
+  if (!fs.existsSync(configPath)) {
+    printErrorMessage(`Can't find "${CONFIG_FILE_NAME}" at ${configPath}!`);
+  }
 
-// check if type name exists
-if (!argsType) {
-  printErrorMessage('Required parameter "type-id" is missing!');
-}
-
-// check if type value exists
-if (!argsTypeString) {
-  printErrorMessage('Required parameter "type-value" is missing!');
-}
-
-// path to project root folder
-const dirProject = path.resolve('');
-// path to cli folder
-const dirCli = __dirname;
-// path to config file
-const configPath = joinPathes(dirCli, CONFIG_FILE_NAME);
-
-// check if config file exists
-if (!fs.existsSync(configPath)) {
-  printErrorMessage(`Can't find "${CONFIG_FILE_NAME}" at ${configPath}!`);
-}
-
-let configData = {};
-
-// read from config file
-try {
-  const configJson = fs.readFileSync(configPath, 'utf-8');
-  configData = JSON.parse(configJson);
-} catch (error) {
-  printError(error);
-}
+  // read from config file
+  try {
+    const configJson = fs.readFileSync(configPath, 'utf-8');
+    return JSON.parse(configJson);
+  } catch (error) {
+    printError(error);
+  }
+};
 
 const {
   types,
