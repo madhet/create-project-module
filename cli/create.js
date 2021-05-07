@@ -65,10 +65,11 @@ const toPascalCase = (str) => splitString(str, /[-_]/g)
   )
   .join('');
 
-const substituteString = (str, options = {}) => {
+const substituteString = (str, replacePairs, options = {}) => {
   const { pascal } = options;
+
   return str.replace(/\[\[(\w+)\]\]/g, (_, p1) => {
-    const replacement = replaceValues[p1];
+    const replacement = replacePairs[p1];
 
     if (!replacement) {
       return '';
@@ -78,16 +79,16 @@ const substituteString = (str, options = {}) => {
   });
 };
 
-const substituteDirPath = (path) => {
-  return substituteString(path);
+const substituteDirPath = (path, replacePairs) => {
+  return substituteString(path, replacePairs);
 };
 
-const substituteFilePath = (path) => {
-  return substituteString(path, { pascal: true });
+const substituteFilePath = (path, replacePairs) => {
+  return substituteString(path, replacePairs, { pascal: true });
 };
 
-const substituteFileContent = (fileData) => {
-  return substituteString(fileData, { pascal: true });
+const substituteFileContent = (fileData, replacePairs) => {
+  return substituteString(fileData, replacePairs, { pascal: true });
 };
 
 const getConfigFromFile = () => {
@@ -229,25 +230,31 @@ const getFullConfig = (argsType, argsTypeString, fileConfig) => {
   };
 };
 
-const getFileFullPath = (parentPath, filePath) => joinPathes(
-  dirProjectDestination,
-  parentPath,
-  filePath,
-);
+const getTemplateFileFullPath = (templateFilePath, config = {}) => {
+  const { dirProject, dirFileTemplates } = config;
 
-const getTemplateFileFullPath = (templateFilePath) => joinPathes(
-  dirProject,
-  dirFileTemplates,
-  templateFilePath,
-);
-
-const createFileFullPath = (dirPath, filePath) => {
-  const finalDirPath = substituteDirPath(dirPath);
-  const finalFilePath = substituteFilePath(filePath);
-  return getFileFullPath(finalDirPath, finalFilePath);
+  return joinPathes(
+    dirProject,
+    dirFileTemplates,
+    templateFilePath,
+  );
 };
 
-const createFileFromTemplate = (templateFilePath, filePath) => {
+const getDistanationFileFullPath = (dirPath, filePath, config = {}) => {
+  const { replacePairs, dirProjectDestination } = config;
+  const finalDirPath = substituteDirPath(dirPath, replacePairs);
+  const finalFilePath = substituteFilePath(filePath, replacePairs);
+
+  return joinPathes(
+    dirProjectDestination,
+    finalDirPath,
+    finalFilePath,
+  );
+};
+
+const createFileFromTemplate = (templateFilePath, filePath, config = {}) => {
+  const { replacePairs } = config;
+
   if (!fs.existsSync(templateFilePath)) {
     printWarnMessage(`Template file ${templateFilePath} does not exist!`);
     return;
@@ -260,42 +267,63 @@ const createFileFromTemplate = (templateFilePath, filePath) => {
 
   try {
     const templateData = fs.readFileSync(templateFilePath, 'utf8');
-    const fileData = substituteFileContent(templateData);
+    const fileData = substituteFileContent(templateData, replacePairs);
     fs.writeFileSync(filePath, fileData);
   } catch (error) {
     printError(error);
   }
 };
 
-const parseFiles = (folder, filesObject) => {
+const parseFiles = (folder, filesObject, config) => {
   if (!filesObject || !Object.keys(filesObject).length) {
     return;
   }
 
-  Object.entries(filesObject)
+  Object
+    .entries(filesObject)
     .forEach(([templateName, fileName]) => {
-      const templatePath = getTemplateFileFullPath(templateName);
-      const filePath = createFileFullPath(folder, fileName);
-      createFileFromTemplate(templatePath, filePath);
+      const templatePath = getTemplateFileFullPath(templateName, config);
+      const filePath = getDistanationFileFullPath(folder, fileName, config);
+      createFileFromTemplate(templatePath, filePath, config);
     });
 };
 
-const parseFolders = (structure) => {
-  Object.entries(structure)
+const createDir = (dirPath, config = {}) => {
+  const { dirProjectDestination, replacePairs } = config;
+
+  const parentPath = dirProjectDestination;
+  const finalPath = substituteDirPath(dirPath, replacePairs);
+  const finalPathParts = splitString(finalPath, TYPE_VALUE_SEPARATOR);
+  const tempPathParts = [];
+
+  finalPathParts.forEach(part => {
+    tempPathParts.push(part);
+    const currentResolvePath = path.resolve(parentPath, ...tempPathParts);
+    if (!fs.existsSync(currentResolvePath)) {
+      fs.mkdirSync(currentResolvePath);
+    }
+  });
+};
+
+const parseFolders = (structure, config) => {
+  Object
+    .entries(structure)
     .forEach(([folder, filesObject]) => {
-      createDir(folder);
-      parseFiles(folder, filesObject);
+      createDir(folder, config);
+      parseFiles(folder, filesObject, config);
     });
 };
 
-const createType = (type) => {
+const createType = (type, config = {}) => {
+  const { structure } = config;
+
   const typeStructure = structure[type];
 
   if (!typeStructure) {
     printErrorMessage(`No structure for type: ${type} in config file!`);
   }
 
-  parseFolders(typeStructure);
+  parseFolders(typeStructure, config);
 };
 
 try {
